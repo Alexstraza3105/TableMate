@@ -133,7 +133,7 @@ async function queryDataSource(env, dataSourceId) {
   return results;
 }
 
-export async function onRequestGet({ request, env }) {
+async function handleGet({ request, env }) {
   if (!env.NOTION_TOKEN || !env.NOTION_PAGE_ID) {
     return json({ error: 'Server setup is incomplete. Set NOTION_TOKEN and NOTION_PAGE_ID in hosting environment variables.' }, 503);
   }
@@ -161,3 +161,61 @@ export async function onRequestGet({ request, env }) {
     return json({ error: status === 502 ? 'Notion rejected the token or access. Check NOTION_TOKEN and confirm the recipe database is shared with Tablemate.' : `Notion import failed: ${e.message}` }, status);
   }
 }
+const ALLOWED_ORIGIN = 'https://alexstraza3105.github.io';
+
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+    const origin = request.headers.get('Origin') || '';
+    const corsOrigin =
+      origin === ALLOWED_ORIGIN ? ALLOWED_ORIGIN : '';
+
+    const headers = {
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Accept, Content-Type',
+      'Vary': 'Origin'
+    };
+
+    if (corsOrigin) {
+      headers['Access-Control-Allow-Origin'] = corsOrigin;
+    }
+
+    if (request.method === 'OPTIONS') {
+      return new Response(null, {
+        status: 204,
+        headers
+      });
+    }
+
+    if (
+      url.pathname !== '/' &&
+      url.pathname !== '/api/recipes'
+    ) {
+      return new Response('Not found', {
+        status: 404,
+        headers
+      });
+    }
+
+    if (request.method !== 'GET') {
+      return new Response('Method not allowed', {
+        status: 405,
+        headers
+      });
+    }
+
+    const response = await handleGet({ request, env });
+    const responseHeaders = new Headers(response.headers);
+
+    for (const [key, value] of Object.entries(headers)) {
+      responseHeaders.set(key, value);
+    }
+
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: responseHeaders
+    });
+  }
+};
+
