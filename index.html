@@ -222,26 +222,20 @@ function closeRecipeImport(){document.getElementById('recipeImportModal').classL
 async function importRecipeFromUrl(e){e.preventDefault();const url=document.getElementById('recipeImportUrl').value.trim(),status=document.getElementById('recipeImportStatus'),btn=document.getElementById('recipeImportSubmit');if(!url)return;btn.disabled=true;btn.textContent='Importing…';status.textContent='Opening the recipe page and looking for recipe details…';try{const res=await fetch('https://tablemateapi.teoshilin.workers.dev/api/import-recipe',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({url})});const data=await res.json().catch(()=>({error:'The server returned an invalid response.'}));if(!res.ok)throw new Error(data.error||`Import failed (${res.status})`);const r=data.recipe;if(!r||!r.name)throw new Error('No recipe details were found on that page. Try another recipe URL.');closeRecipeImport();openRecipe();document.getElementById('rName').value=r.name||'';document.getElementById('rCategory').value=['Breakfast','Lunch','Dinner','Snack'].includes(r.category)?r.category:'Dinner';document.getElementById('rTime').value=Number(r.time)||30;document.getElementById('rServings').value=Number(r.servings)||2;document.getElementById('rCost').value=Number(r.cost)||0;document.getElementById('rEmoji').value=r.emoji||'🍲';document.getElementById('rIngredients').value=Array.isArray(r.ingredients)?r.ingredients.join('\n'):'';document.getElementById('rInstructions').value=r.instructions||'';document.getElementById('rUrl').value=r.url||url;notify('Recipe imported — review it, then tap Save recipe')}catch(err){status.textContent=err.message;btn.disabled=false;btn.textContent='Try again'}}
 document.getElementById('recipeImportModal').addEventListener('click',e=>{if(e.target.id==='recipeImportModal')closeRecipeImport()});
 function printWeeklyPlan(){
-  // Make sure the planner and its weekly layout are visible before printing.
+  // Prepare the weekly layout, then invoke printing immediately from the tap.
+  // Some mobile browsers block window.print() if it is called from a timeout.
   showTab('planner',document.querySelector('[data-tab="planner"]'));
   setView('weekly');
   renderPlanner();
-  const button=document.querySelector('button[onclick="printWeeklyPlan()"]');
-  if(button){button.disabled=true;button.textContent='Preparing print…'}
-  // Mobile browsers need a moment to apply the print stylesheet after view changes.
-  setTimeout(()=>{
-    if(button){button.disabled=false;button.textContent='⎙ Print weekly plan'}
-    try{
-      if(typeof window.print==='function'){
-        window.focus();
-        window.print();
-      }else{
-        alert('Printing is not supported in this browser. Open this page in Safari, then use Share → Print.');
-      }
-    }catch(error){
-      alert('The browser did not open the print dialog. Use the browser menu or Share menu and choose Print.');
+  try{
+    if(typeof window.print==='function'){
+      window.print();
+    }else{
+      alert('This browser does not support direct printing. Open the browser menu and choose Print, or use Share → Print if available.');
     }
-  },350);
+  }catch(error){
+    alert('The browser did not open printing. Open the browser menu or Share menu and choose Print if available.');
+  }
 }
 function exportData(){let blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='tablemate-backup.json';a.click();URL.revokeObjectURL(a.href)}
 function importData(e){let f=e.target.files[0];if(!f)return;let rd=new FileReader();rd.onload=()=>{try{let x=JSON.parse(rd.result);if(!x.recipes||!x.plan)throw Error();state={...fresh(),...x,plan:normalisePlan(x.plan),settings:{...fresh().settings,...x.settings}};persist();renderPlanner();renderRecipes();renderGroceries();fillSettings();notify('Backup restored')}catch(err){alert('That file does not look like a Tablemate backup.')}e.target.value=''};rd.readAsText(f)}
