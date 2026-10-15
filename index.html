@@ -10,6 +10,138 @@
 @media(max-width:760px){.app{padding:15px 13px 85px}.top{align-items:flex-start}.top-actions .pill{display:none}.heading h2{font-size:23px}.stats{gap:7px}.stat{padding:11px}.stat strong{font-size:19px}.stat span{font-size:11px}.day-focus,.grocery-layout{grid-template-columns:1fr}.recipe-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.week-grid{grid-template-columns:repeat(7,145px)}.nav{margin-bottom:17px}.heading{align-items:flex-start;flex-direction:column}.toolbar{width:100%}.datebar{width:100%;justify-content:space-between}.form-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:390px){.recipe-grid{grid-template-columns:1fr 1fr}.brand h1{font-size:19px}.logo{width:39px;height:39px}.stats{grid-template-columns:repeat(3,minmax(0,1fr))}.stat strong{font-size:17px}}
 .planned-recipe{padding:7px 0;border-top:1px solid var(--line)}.planned-recipe:first-of-type{border-top:0}.meal-slot.filled{height:auto;min-height:100px}.multi-meal-row{margin-top:4px}
+
+@page {
+  size: landscape;
+  margin: 8mm;
+}
+
+@media print {
+  body {
+    background: #fff !important;
+    color: #111 !important;
+    font-size: 9pt;
+  }
+
+  .app {
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .top,
+  .nav,
+  #plannerView .view-switch,
+  .footer,
+  .toast,
+  #dayView,
+  #plannerView .panel > .toolbar button {
+    display: none !important;
+  }
+
+  #plannerView {
+    display: block !important;
+  }
+
+  #plannerView > .heading {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: flex-end !important;
+    margin: 0 0 8px !important;
+  }
+
+  #plannerView > .heading h2 {
+    font-size: 18pt !important;
+    margin: 2px 0 !important;
+  }
+
+  #plannerView > .heading p {
+    font-size: 8pt !important;
+  }
+
+  #weekView {
+    display: grid !important;
+    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+    gap: 5px !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+
+  .day-col {
+    min-width: 0 !important;
+    padding: 5px !important;
+    border: 1px solid #bbb !important;
+    background: #fff !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .day-head {
+    margin-bottom: 4px !important;
+  }
+
+  .day-head b {
+    font-size: 9pt !important;
+  }
+
+  .day-head span,
+  .slot-label,
+  .slot-meta {
+    font-size: 7pt !important;
+  }
+
+  .meal-slot {
+    min-height: 0 !important;
+    padding: 4px !important;
+    margin: 4px 0 !important;
+    background: #fff !important;
+    border-color: #ccc !important;
+    break-inside: avoid;
+  }
+
+  .planned-recipe {
+    padding: 4px 0 !important;
+  }
+
+  .slot-name {
+    font-size: 8pt !important;
+    margin: 2px 0 !important;
+  }
+
+  .slot-actions,
+  .empty-add {
+    display: none !important;
+  }
+
+  .panel {
+    box-shadow: none !important;
+    border: 0 !important;
+    padding: 0 !important;
+  }
+
+  .stats {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 5px !important;
+    margin-bottom: 7px !important;
+  }
+
+  .stat {
+    padding: 5px !important;
+    border: 1px solid #ddd !important;
+    background: #fff !important;
+  }
+
+  .stat span,
+  .stat small {
+    font-size: 7pt !important;
+  }
+
+  .stat strong {
+    font-size: 11pt !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -20,7 +152,7 @@
 <section id="plannerView">
 <div class="heading"><div><div class="eyebrow">Your table, your rhythm</div><h2>Meal planner</h2><p>Make the week's meals feel a little more organised.</p></div><div class="view-switch"><button id="dailyBtn" onclick="setView('daily')">Day</button><button id="weeklyBtn" class="active" onclick="setView('weekly')">Week</button></div></div>
 <div class="stats"><div class="stat"><span>Meals planned</span><strong id="plannedStat">0</strong><small>of 28 meal slots</small></div><div class="stat"><span>Estimated meal spend</span><strong id="spendStat">S$0.00</strong><small>based on planned servings</small></div><div class="stat"><span>Recipes saved</span><strong id="recipeStat">0</strong><small>in your library</small></div></div>
-<div class="panel"><div class="toolbar" style="justify-content:space-between;margin-bottom:15px"><div class="datebar"><button class="iconbtn" onclick="moveDate(-1)" aria-label="Previous">‹</button><strong id="dateLabel">This week</strong><button class="iconbtn" onclick="moveDate(1)" aria-label="Next">›</button><button class="secondary" onclick="goToday()">Today</button></div><button class="secondary" onclick="generateGroceries()">↻ Refresh grocery list</button></div><div id="weekView" class="week-grid"></div><div id="dayView" class="day-focus hidden"><div class="panel" style="box-shadow:none"><div class="section-title"><h3 id="dayTitle">Today's meals</h3><span class="muted" id="dayDate"></span></div><div id="dayMeals" class="meal-list"></div></div><div class="panel" style="box-shadow:none"><div class="section-title"><h3>Day at a glance</h3></div><div class="stat" style="margin-bottom:8px"><span>Estimated cost</span><strong id="daySpend">S$0.00</strong></div><div class="stat"><span>Planned servings</span><strong id="dayServings">0</strong></div><p class="muted" style="font-size:12px">Costs are estimates based on each recipe's cost per serving.</p></div></div></div>
+<div class="panel"><div class="toolbar" style="justify-content:space-between;margin-bottom:15px"><div class="datebar"><button class="iconbtn" onclick="moveDate(-1)" aria-label="Previous">‹</button><strong id="dateLabel">This week</strong><button class="iconbtn" onclick="moveDate(1)" aria-label="Next">›</button><button class="secondary" onclick="goToday()">Today</button></div><div class="toolbar" style="gap:8px"><button class="secondary" onclick="generateGroceries()">↻ Refresh grocery list</button><button class="secondary" onclick="printWeeklyPlan()">⎙ Print weekly plan</button></div></div><div id="weekView" class="week-grid"></div><div id="dayView" class="day-focus hidden"><div class="panel" style="box-shadow:none"><div class="section-title"><h3 id="dayTitle">Today's meals</h3><span class="muted" id="dayDate"></span></div><div id="dayMeals" class="meal-list"></div></div><div class="panel" style="box-shadow:none"><div class="section-title"><h3>Day at a glance</h3></div><div class="stat" style="margin-bottom:8px"><span>Estimated cost</span><strong id="daySpend">S$0.00</strong></div><div class="stat"><span>Planned servings</span><strong id="dayServings">0</strong></div><p class="muted" style="font-size:12px">Costs are estimates based on each recipe's cost per serving.</p></div></div></div>
 </section>
 <section id="recipesView" class="hidden"><div class="heading"><div><div class="eyebrow">Your household cookbook</div><h2>Recipe library</h2><p>Save recipes here and open their original Notion pages.</p></div><div class="toolbar"><button class="secondary" onclick="openRecipeImport()">↗ Import from URL</button><button class="primary" onclick="openRecipe()">＋ Add recipe</button></div></div><div class="toolbar" style="margin-bottom:15px"><input class="search" id="recipeSearch" placeholder="Search recipes or ingredients…" oninput="renderRecipes()"><select id="categoryFilter" onchange="renderRecipes()"><option value="">All meal types</option><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option></select><select id="sortRecipes" onchange="renderRecipes()"><option value="name">Name A–Z</option><option value="cost">Lowest cost</option><option value="time">Quickest</option></select></div><div id="recipeGrid" class="recipe-grid"></div></section>
 <section id="groceriesView" class="hidden"><div class="heading"><div><div class="eyebrow">One list, less guesswork</div><h2>Shopping list</h2><p>Generated from this week's planned meals. Tick items off as you shop.</p></div><button class="primary" onclick="generateGroceries()">↻ Generate from plan</button></div><div class="grocery-layout"><div class="panel"><div class="section-title"><h3>Items to pick up</h3><span id="groceryCount" class="tag">0 items</span></div><div class="toolbar" style="margin-bottom:12px"><input id="newGrocery" class="search" placeholder="Add an item (e.g. milk)" onkeydown="if(event.key==='Enter')addGrocery()"><button class="secondary" onclick="addGrocery()">Add item</button></div><div id="groceryList" class="shop-list"></div><div class="toolbar" style="margin-top:14px"><button class="secondary" onclick="clearChecked()">Clear checked</button><button class="secondary" onclick="exportGroceries()">Copy list</button></div></div><div class="panel"><div class="section-title"><h3>Planned meals</h3></div><p class="muted" style="font-size:12px;margin-top:0">Ingredients are combined by name where possible. Check quantities and pantry staples before shopping.</p><div id="groceryMeals" class="shop-list"></div><div class="note" style="margin-top:13px">Tip: add ingredient quantities to each recipe for a more useful shopping list. Items without quantities are still included.</div></div></div></section>
@@ -61,13 +193,13 @@ function recipe(id){return state.recipes.find(r=>r.id===id)}
 function getPlan(date,meal){let p=state.plan[planKey(date,meal)];if(!Array.isArray(p)){p=p?[p]:[];state.plan[planKey(date,meal)]=p}return p}
 function assign(date,meal,id){if(id){let p=getPlan(date,meal);p.push({recipeId:id,servings:recipe(id)?.servings||2})}else delete state.plan[planKey(date,meal)];persist();renderPlanner()}
 function assign(date,meal,id){if(id)state.plan[planKey(date,meal)]={recipeId:id,servings:recipe(id)?.servings||2};else delete state.plan[planKey(date,meal)];persist();renderPlanner()}
-function slotHtml(date,meal){let plans=getPlan(date,meal),items=plans.map((p,i)=>{let r=recipe(p.recipeId);if(!r)return '';return `<div class="planned-recipe"><div class="slot-name">${r.emoji||'🍽️'} ${esc(r.name)}</div><div class="slot-meta">${p.servings} servings · ${money(r.cost/Math.max(1,r.servings)*p.servings)}</div><div class="slot-actions"><button class="mini" onclick="openRecipe('${r.id}')">Recipe</button><button class="mini danger" onclick="removePlannedRecipe('${date}','${meal}',${i})">Remove</button></div></div>`}).join('');return `<div class="meal-slot ${plans.length?'filled':''}"><div class="slot-label">${meal}${plans.length?` · ${plans.length}`:''}</div>${items||''}<button class="empty-add" onclick="openAssign('${date}','${meal}')">＋ Add ${plans.length?'another recipe':'a meal'}</button></div>`}
-function renderPlanner(){let start=weekStart(focusDate),end=shift(start,6);document.getElementById('dateLabel').textContent=fmt(start,{month:'short',day:'numeric'})+' – '+fmt(end,{month:'short',day:'numeric',year:'numeric'});let grid=document.getElementById('weekView');grid.innerHTML='';for(let i=0;i<7;i++){let date=shift(start,i),col=document.createElement('div');col.className='day-col';col.innerHTML=`<div class="day-head ${date===todayISO()?'today':''}"><b>${fmt(date,{weekday:'short'})}</b><span>${fmt(date,{month:'short',day:'numeric'})}</span></div>${MEALS.map(m=>slotHtml(date,m)).join('')}<button class="empty-add" onclick="focusDate='${date}';setView('daily')">View day →</button>`;grid.appendChild(col)}let meals=document.getElementById('dayMeals');document.getElementById('dayTitle').textContent=fmt(focusDate,{weekday:'long'})+' meals';document.getElementById('dayDate').textContent=fmt(focusDate,{month:'long',day:'numeric',year:'numeric'});meals.innerHTML=MEALS.map(m=>{let plans=getPlan(focusDate,m),valid=plans.map((p,i)=>({p,r:recipe(p.recipeId),i})).filter(x=>x.r);let spend=valid.reduce((a,x)=>a+x.r.cost/Math.max(1,x.r.servings)*x.p.servings,0),servings=valid.reduce((a,x)=>a+x.p.servings,0);return `<div class="meal-row multi-meal-row"><div class="meal-emoji">${valid[0]?.r.emoji||'🍽️'}</div><div class="grow"><h3>${m}${valid.length?' · '+valid.map(x=>esc(x.r.name)).join(', '):''}</h3><p>${valid.length?money(spend)+' estimated · '+servings+' servings':'No meal planned yet'}</p></div><button class="mini" onclick="openAssign('${focusDate}','${m}')">＋ Add recipe</button></div>${valid.map(x=>`<div class="meal-row"><div class="grow"><strong>${x.r.emoji||'🍽️'} ${esc(x.r.name)}</strong><p>${x.p.servings} servings · ${money(x.r.cost/Math.max(1,x.r.servings)*x.p.servings)}</p></div><button class="mini" onclick="openRecipe('${x.r.id}')">Recipe</button><button class="mini danger" onclick="removePlannedRecipe('${focusDate}','${m}',${x.i})">Remove</button></div>`).join('')}`}).join('');let dailySpend=0,dailyServings=0;MEALS.forEach(m=>getPlan(focusDate,m).forEach(p=>{let r=recipe(p.recipeId);if(r){dailySpend+=r.cost/Math.max(1,r.servings)*p.servings;dailyServings+=p.servings}}));document.getElementById('daySpend').textContent=money(dailySpend);document.getElementById('dayServings').textContent=dailyServings;renderStats()}
-function renderStats(){let count=0,spend=0;Object.values(state.plan).forEach(value=>{(Array.isArray(value)?value:[value]).forEach(p=>{let r=p&&recipe(p.recipeId);if(r){count++;spend+=r.cost/Math.max(1,r.servings)*Math.max(1,p.servings)}})});document.getElementById('plannedStat').textContent=count;document.getElementById('spendStat').textContent=money(spend);document.getElementById('recipeStat').textContent=state.recipes.length;document.getElementById('householdBadge').textContent='⌂ '+(state.settings.householdName||'Household planner')}
+function slotHtml(date,meal){let plans=getPlan(date,meal),items=plans.map((p,i)=>{let r=recipe(p.recipeId);if(!r)return '';return `<div class="planned-recipe"><div class="slot-name">${r.emoji||'🍽️'} ${esc(r.name)}</div><div class="slot-meta">${Number(p.servings)>0?`${p.servings} servings · ${money(r.cost/Math.max(1,r.servings)*p.servings)}`:'Servings not set'}</div><div class="slot-actions"><button class="mini" onclick="openRecipe('${r.id}')">Recipe</button><button class="mini danger" onclick="removePlannedRecipe('${date}','${meal}',${i})">Remove</button></div></div>`}).join('');return `<div class="meal-slot ${plans.length?'filled':''}"><div class="slot-label">${meal}${plans.length?` · ${plans.length}`:''}</div>${items||''}<button class="empty-add" onclick="openAssign('${date}','${meal}')">＋ Add ${plans.length?'another recipe':'a meal'}</button></div>`}
+function renderPlanner(){let start=weekStart(focusDate),end=shift(start,6);document.getElementById('dateLabel').textContent=fmt(start,{month:'short',day:'numeric'})+' – '+fmt(end,{month:'short',day:'numeric',year:'numeric'});let grid=document.getElementById('weekView');grid.innerHTML='';for(let i=0;i<7;i++){let date=shift(start,i),col=document.createElement('div');col.className='day-col';col.innerHTML=`<div class="day-head ${date===todayISO()?'today':''}"><b>${fmt(date,{weekday:'short'})}</b><span>${fmt(date,{month:'short',day:'numeric'})}</span></div>${MEALS.map(m=>slotHtml(date,m)).join('')}<button class="empty-add" onclick="focusDate='${date}';setView('daily')">View day →</button>`;grid.appendChild(col)}let meals=document.getElementById('dayMeals');document.getElementById('dayTitle').textContent=fmt(focusDate,{weekday:'long'})+' meals';document.getElementById('dayDate').textContent=fmt(focusDate,{month:'long',day:'numeric',year:'numeric'});meals.innerHTML=MEALS.map(m=>{let plans=getPlan(focusDate,m),valid=plans.map((p,i)=>({p,r:recipe(p.recipeId),i})).filter(x=>x.r);let spend=valid.reduce((a,x)=>a+x.r.cost/Math.max(1,x.r.servings)*x.p.servings,0),servings=valid.reduce((a,x)=>a+x.p.servings,0);return `<div class="meal-row multi-meal-row"><div class="meal-emoji">${valid[0]?.r.emoji||'🍽️'}</div><div class="grow"><h3>${m}${valid.length?' · '+valid.map(x=>esc(x.r.name)).join(', '):''}</h3><p>${valid.length?money(spend)+' estimated · '+servings+' servings':'No meal planned yet'}</p></div><button class="mini" onclick="openAssign('${focusDate}','${m}')">＋ Add recipe</button></div>${valid.map(x=>`<div class="meal-row"><div class="grow"><strong>${x.r.emoji||'🍽️'} ${esc(x.r.name)}</strong><p>${Number(x.p.servings)>0?`${x.p.servings} servings · ${money(x.r.cost/Math.max(1,x.r.servings)*x.p.servings)}`:'Servings not set'}</p></div><button class="mini" onclick="openRecipe('${x.r.id}')">Recipe</button><button class="mini danger" onclick="removePlannedRecipe('${focusDate}','${m}',${x.i})">Remove</button></div>`).join('')}`}).join('');let dailySpend=0,dailyServings=0;MEALS.forEach(m=>getPlan(focusDate,m).forEach(p=>{let r=recipe(p.recipeId);if(r){dailySpend+=r.cost/Math.max(1,r.servings)*p.servings;dailyServings+=p.servings}}));document.getElementById('daySpend').textContent=money(dailySpend);document.getElementById('dayServings').textContent=dailyServings;renderStats()}
+function renderStats(){let count=0,spend=0;Object.values(state.plan).forEach(value=>{(Array.isArray(value)?value:[value]).forEach(p=>{let r=p&&recipe(p.recipeId);if(r){count++;const servings=Number(p.servings);if(servings>0)spend+=r.cost/Math.max(1,r.servings)*servings}})});document.getElementById('plannedStat').textContent=count;document.getElementById('spendStat').textContent=money(spend);document.getElementById('recipeStat').textContent=state.recipes.length;document.getElementById('householdBadge').textContent='⌂ '+(state.settings.householdName||'Household planner')}
 function removePlannedRecipe(date,meal,index){let key=planKey(date,meal),plans=getPlan(date,meal);if(index<0||index>=plans.length)return;plans.splice(index,1);if(!plans.length)delete state.plan[key];persist();renderPlanner();renderGroceries();notify('Recipe removed from meal')}
-function openAssign(date,meal){let options=state.recipes.map(r=>`<option value="${esc(r.id)}">${esc(r.name)} · ${r.category}</option>`).join('');let plans=getPlan(date,meal);let content=`<div class="modal-head"><h2>Add to ${meal.toLowerCase()}</h2><button class="close" onclick="closeRecipe()">×</button></div><p class="muted">${fmt(date,{weekday:'long',month:'long',day:'numeric'})}</p>${plans.length?`<p class="muted">Already planned: ${plans.map(p=>esc(recipe(p.recipeId)?.name||'Recipe')).join(', ')}</p>`:''}<div class="field"><label>Choose a recipe</label><select id="assignRecipe"><option value="">— Choose a recipe —</option>${options}</select></div><div class="field"><label>Servings for this recipe</label><input id="assignServings" type="number" min="1" value="2"></div><div class="toolbar" style="justify-content:flex-end;margin-top:18px"><button class="pill" onclick="closeRecipe()">Cancel</button><button class="primary" onclick="saveAssign('${date}','${meal}')">Add recipe</button></div>`;showCustomModal(content);document.getElementById('assignRecipe').focus()}
+function openAssign(date,meal){let options=state.recipes.map(r=>`<option value="${esc(r.id)}">${esc(r.name)} · ${r.category}</option>`).join('');let plans=getPlan(date,meal);let content=`<div class="modal-head"><h2>Add to ${meal.toLowerCase()}</h2><button class="close" onclick="closeRecipe()">×</button></div><p class="muted">${fmt(date,{weekday:'long',month:'long',day:'numeric'})}</p>${plans.length?`<p class="muted">Already planned: ${plans.map(p=>esc(recipe(p.recipeId)?.name||'Recipe')).join(', ')}</p>`:''}<div class="field"><label>Choose a recipe</label><select id="assignRecipe"><option value="">— Choose a recipe —</option>${options}</select></div><div class="field"><label>Servings for this recipe</label><input id="assignServings" type="number" min="1" placeholder="Leave blank if undecided" value=""></div><div class="toolbar" style="justify-content:flex-end;margin-top:18px"><button class="pill" onclick="closeRecipe()">Cancel</button><button class="primary" onclick="saveAssign('${date}','${meal}')">Add recipe</button></div>`;showCustomModal(content);document.getElementById('assignRecipe').focus()}
 function showCustomModal(content){document.getElementById('recipeForm').classList.add('hidden');document.getElementById('modalTitle').classList.add('hidden');document.querySelector('.modal-head').classList.add('hidden');let card=document.querySelector('.modal-card');let custom=document.getElementById('customModalContent');if(!custom){custom=document.createElement('div');custom.id='customModalContent';card.appendChild(custom)}custom.innerHTML=content;custom.classList.remove('hidden');document.getElementById('recipeModal').classList.add('show')}
-function saveAssign(date,meal){let id=document.getElementById('assignRecipe').value;if(!id){notify('Choose a recipe first');return}let servings=Math.max(1,Number(document.getElementById('assignServings').value)||1);getPlan(date,meal).push({recipeId:id,servings});persist();closeRecipe();renderPlanner();renderGroceries();notify('Recipe added to your plan')}
+function saveAssign(date,meal){let id=document.getElementById('assignRecipe').value;if(!id){notify('Choose a recipe first');return}const servingsInput=document.getElementById('assignServings').value.trim();const servings=servingsInput===''?'':Math.max(1,Number(servingsInput)||1);getPlan(date,meal).push({recipeId:id,servings});persist();closeRecipe();renderPlanner();renderGroceries();notify('Recipe added to your plan')}
 function openRecipe(id=''){document.getElementById('recipeForm').classList.remove('hidden');document.getElementById('modalTitle').classList.remove('hidden');document.querySelector('.modal-head').classList.remove('hidden');let c=document.getElementById('customModalContent');if(c)c.classList.add('hidden');document.getElementById('recipeForm').reset();document.getElementById('recipeId').value='';document.getElementById('rServings').value=2;document.getElementById('rCost').value=8;document.getElementById('rTime').value=30;document.getElementById('rEmoji').value='🍲';document.getElementById('deleteRecipeBtn').classList.add('hidden');document.getElementById('modalTitle').textContent=id?'Edit recipe':'Add a recipe';if(id){let r=recipe(id);if(!r)return;document.getElementById('recipeId').value=r.id;document.getElementById('rName').value=r.name;document.getElementById('rCategory').value=r.category;document.getElementById('rTime').value=r.time;document.getElementById('rServings').value=r.servings;document.getElementById('rCost').value=r.cost;document.getElementById('rEmoji').value=r.emoji;document.getElementById('rIngredients').value=(r.ingredients||[]).join('\n');document.getElementById('rInstructions').value=r.instructions||'';document.getElementById('rUrl').value=r.url||'';document.getElementById('deleteRecipeBtn').classList.remove('hidden')}document.getElementById('recipeModal').classList.add('show')}
 function closeRecipe(){document.getElementById('recipeModal').classList.remove('show')}
 document.getElementById('recipeModal').addEventListener('click',e=>{if(e.target.id==='recipeModal')closeRecipe()});
@@ -89,6 +221,7 @@ function openRecipeImport(){document.getElementById('recipeImportUrl').value='';
 function closeRecipeImport(){document.getElementById('recipeImportModal').classList.remove('show')}
 async function importRecipeFromUrl(e){e.preventDefault();const url=document.getElementById('recipeImportUrl').value.trim(),status=document.getElementById('recipeImportStatus'),btn=document.getElementById('recipeImportSubmit');if(!url)return;btn.disabled=true;btn.textContent='Importing…';status.textContent='Opening the recipe page and looking for recipe details…';try{const res=await fetch('https://tablemateapi.teoshilin.workers.dev/api/import-recipe',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({url})});const data=await res.json().catch(()=>({error:'The server returned an invalid response.'}));if(!res.ok)throw new Error(data.error||`Import failed (${res.status})`);const r=data.recipe;if(!r||!r.name)throw new Error('No recipe details were found on that page. Try another recipe URL.');closeRecipeImport();openRecipe();document.getElementById('rName').value=r.name||'';document.getElementById('rCategory').value=['Breakfast','Lunch','Dinner','Snack'].includes(r.category)?r.category:'Dinner';document.getElementById('rTime').value=Number(r.time)||30;document.getElementById('rServings').value=Number(r.servings)||2;document.getElementById('rCost').value=Number(r.cost)||0;document.getElementById('rEmoji').value=r.emoji||'🍲';document.getElementById('rIngredients').value=Array.isArray(r.ingredients)?r.ingredients.join('\n'):'';document.getElementById('rInstructions').value=r.instructions||'';document.getElementById('rUrl').value=r.url||url;notify('Recipe imported — review it, then tap Save recipe')}catch(err){status.textContent=err.message;btn.disabled=false;btn.textContent='Try again'}}
 document.getElementById('recipeImportModal').addEventListener('click',e=>{if(e.target.id==='recipeImportModal')closeRecipeImport()});
+function printWeeklyPlan(){setView('weekly');showTab('planner',document.querySelector('[data-tab="planner"]'));window.print()}
 function exportData(){let blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='tablemate-backup.json';a.click();URL.revokeObjectURL(a.href)}
 function importData(e){let f=e.target.files[0];if(!f)return;let rd=new FileReader();rd.onload=()=>{try{let x=JSON.parse(rd.result);if(!x.recipes||!x.plan)throw Error();state={...fresh(),...x,plan:normalisePlan(x.plan),settings:{...fresh().settings,...x.settings}};persist();renderPlanner();renderRecipes();renderGroceries();fillSettings();notify('Backup restored')}catch(err){alert('That file does not look like a Tablemate backup.')}e.target.value=''};rd.readAsText(f)}
 function resetDemo(){if(!confirm('Reset recipes, meal plans and grocery list to the starter demo? Export a backup first if needed.'))return;state=fresh();persist();renderPlanner();renderRecipes();renderGroceries();fillSettings();notify('Demo data restored')}
