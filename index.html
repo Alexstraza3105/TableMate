@@ -16,11 +16,19 @@
   margin: 8mm;
 }
 
+.day-collapse-toggle{display:flex;align-items:center;justify-content:space-between;gap:7px;width:100%;padding:2px 0;border:0;background:transparent;color:inherit;text-align:left;font:inherit;cursor:pointer}
+.day-collapse-toggle .day-name{font-size:13px;font-weight:750}
+.day-collapse-toggle .day-date{font-size:11px;color:var(--muted)}
+.day-collapse-toggle .collapse-mark{display:inline-grid;place-items:center;flex:0 0 23px;width:23px;height:23px;border-radius:7px;background:#e9eee6;color:var(--green);font-size:16px;font-weight:700}
+.day-col.collapsed{min-height:0;padding-bottom:8px;background:#f0efe8}
+.day-col.collapsed .day-head{margin-bottom:0}
+.day-col.collapsed .meal-slot,.day-col.collapsed>.empty-add{display:none!important}
+
 @media print {
   body {
     background: #fff !important;
     color: #111 !important;
-    font-size: 9pt;
+    font-size: 11pt;
   }
 
   .app {
@@ -62,15 +70,19 @@
 
   #weekView {
     display: grid !important;
-    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
-    gap: 5px !important;
+    grid-template-columns: repeat(var(--print-day-count, 7), minmax(0, 1fr)) !important;
+    gap: 7px !important;
     overflow: visible !important;
     padding: 0 !important;
   }
 
+  .day-col.collapsed {
+    display: none !important;
+  }
+
   .day-col {
     min-width: 0 !important;
-    padding: 5px !important;
+    padding: 8px !important;
     border: 1px solid #bbb !important;
     background: #fff !important;
     break-inside: avoid;
@@ -81,20 +93,22 @@
     margin-bottom: 4px !important;
   }
 
-  .day-head b {
-    font-size: 9pt !important;
+  .day-head b,
+  .day-collapse-toggle .day-name {
+    font-size: calc(12pt * var(--print-font-scale, 1)) !important;
   }
 
   .day-head span,
+  .day-collapse-toggle .day-date,
   .slot-label,
   .slot-meta {
-    font-size: 7pt !important;
+    font-size: calc(9pt * var(--print-font-scale, 1)) !important;
   }
 
   .meal-slot {
     min-height: 0 !important;
-    padding: 4px !important;
-    margin: 4px 0 !important;
+    padding: 7px !important;
+    margin: 6px 0 !important;
     background: #fff !important;
     border-color: #ccc !important;
     break-inside: avoid;
@@ -105,8 +119,17 @@
   }
 
   .slot-name {
-    font-size: 8pt !important;
-    margin: 2px 0 !important;
+    font-size: calc(11pt * var(--print-font-scale, 1)) !important;
+    line-height: 1.35 !important;
+    margin: 4px 0 !important;
+  }
+
+  .day-collapse-toggle {
+    cursor: default !important;
+  }
+
+  .day-collapse-toggle .collapse-mark {
+    display: none !important;
   }
 
   .slot-actions,
@@ -170,6 +193,7 @@ const shift=(iso,n)=>{let d=new Date(iso+'T12:00:00');d.setDate(d.getDate()+n);r
 const money=n=>'S$'+Number(n||0).toFixed(2);
 const fresh=()=>({recipes:structuredClone(seedRecipes),plan:{},groceries:[],settings:{notionHome:'',householdName:'Our household'}});
 let state=load(),focusDate=todayISO(),view='weekly',activeTab='planner',toastTimer;
+const collapsedDays=new Set();
 function normalisePlan(plan={}){const out={};for(const [k,v] of Object.entries(plan||{})){if(Array.isArray(v))out[k]=v.filter(x=>x&&x.recipeId);else if(v&&v.recipeId)out[k]=[v]}return out}
 function load(){try{let v=JSON.parse(localStorage.getItem('tablemate-v1'));if(!(v&&v.recipes&&v.plan))return fresh();let loaded={...fresh(),...v,plan:normalisePlan(v.plan),settings:{...fresh().settings,...v.settings}};const demoIds=new Set(['r1','r2','r3','r4','r5','r6','r7','r8']);loaded.recipes=loaded.recipes.filter(r=>!demoIds.has(r.id));Object.keys(loaded.plan).forEach(k=>{loaded.plan[k]=loaded.plan[k].filter(p=>!demoIds.has(p.recipeId));if(!loaded.plan[k].length)delete loaded.plan[k]});return loaded}catch(e){return fresh()}}
 function persist(){localStorage.setItem('tablemate-v1',JSON.stringify(state));renderStats()}
@@ -187,7 +211,10 @@ function getPlan(date,meal){let p=state.plan[planKey(date,meal)];if(!Array.isArr
 function assign(date,meal,id){if(id){let p=getPlan(date,meal);p.push({recipeId:id,servings:recipe(id)?.servings||2})}else delete state.plan[planKey(date,meal)];persist();renderPlanner()}
 function assign(date,meal,id){if(id)state.plan[planKey(date,meal)]={recipeId:id,servings:recipe(id)?.servings||2};else delete state.plan[planKey(date,meal)];persist();renderPlanner()}
 function slotHtml(date,meal){let plans=getPlan(date,meal),items=plans.map((p,i)=>{let r=recipe(p.recipeId);if(!r)return '';return `<div class="planned-recipe"><div class="slot-name">${r.emoji||'🍽️'} ${esc(r.name)}</div><div class="slot-meta">${Number(p.servings)>0?`${p.servings} servings · ${money(r.cost/Math.max(1,r.servings)*p.servings)}`:'Servings not set'}</div><div class="slot-actions"><button class="mini" onclick="openRecipe('${r.id}')">Recipe</button><button class="mini danger" onclick="removePlannedRecipe('${date}','${meal}',${i})">Remove</button></div></div>`}).join('');return `<div class="meal-slot ${plans.length?'filled':''}"><div class="slot-label">${meal}${plans.length?` · ${plans.length}`:''}</div>${items||''}<button class="empty-add" onclick="openAssign('${date}','${meal}')">＋ Add ${plans.length?'another recipe':'a meal'}</button></div>`}
-function renderPlanner(){let start=weekStart(focusDate),end=shift(start,6);document.getElementById('dateLabel').textContent=fmt(start,{month:'short',day:'numeric'})+' – '+fmt(end,{month:'short',day:'numeric',year:'numeric'});let grid=document.getElementById('weekView');grid.innerHTML='';for(let i=0;i<7;i++){let date=shift(start,i),col=document.createElement('div');col.className='day-col';col.innerHTML=`<div class="day-head ${date===todayISO()?'today':''}"><b>${fmt(date,{weekday:'short'})}</b><span>${fmt(date,{month:'short',day:'numeric'})}</span></div>${MEALS.map(m=>slotHtml(date,m)).join('')}<button class="empty-add" onclick="focusDate='${date}';setView('daily')">View day →</button>`;grid.appendChild(col)}let meals=document.getElementById('dayMeals');document.getElementById('dayTitle').textContent=fmt(focusDate,{weekday:'long'})+' meals';document.getElementById('dayDate').textContent=fmt(focusDate,{month:'long',day:'numeric',year:'numeric'});meals.innerHTML=MEALS.map(m=>{let plans=getPlan(focusDate,m),valid=plans.map((p,i)=>({p,r:recipe(p.recipeId),i})).filter(x=>x.r);let spend=valid.reduce((a,x)=>a+x.r.cost/Math.max(1,x.r.servings)*x.p.servings,0),servings=valid.reduce((a,x)=>a+x.p.servings,0);return `<div class="meal-row multi-meal-row"><div class="meal-emoji">${valid[0]?.r.emoji||'🍽️'}</div><div class="grow"><h3>${m}${valid.length?' · '+valid.map(x=>esc(x.r.name)).join(', '):''}</h3><p>${valid.length?money(spend)+' estimated · '+servings+' servings':'No meal planned yet'}</p></div><button class="mini" onclick="openAssign('${focusDate}','${m}')">＋ Add recipe</button></div>${valid.map(x=>`<div class="meal-row"><div class="grow"><strong>${x.r.emoji||'🍽️'} ${esc(x.r.name)}</strong><p>${Number(x.p.servings)>0?`${x.p.servings} servings · ${money(x.r.cost/Math.max(1,x.r.servings)*x.p.servings)}`:'Servings not set'}</p></div><button class="mini" onclick="openRecipe('${x.r.id}')">Recipe</button><button class="mini danger" onclick="removePlannedRecipe('${focusDate}','${m}',${x.i})">Remove</button></div>`).join('')}`}).join('');let dailySpend=0,dailyServings=0;MEALS.forEach(m=>getPlan(focusDate,m).forEach(p=>{let r=recipe(p.recipeId);if(r){dailySpend+=r.cost/Math.max(1,r.servings)*p.servings;dailyServings+=p.servings}}));document.getElementById('daySpend').textContent=money(dailySpend);document.getElementById('dayServings').textContent=dailyServings;renderStats()}
+function toggleDay(date){if(collapsedDays.has(date))collapsedDays.delete(date);else collapsedDays.add(date);renderPlanner()}
+function preparePrintLayout(){const grid=document.getElementById('weekView');const visible=[...grid.querySelectorAll('.day-col:not(.collapsed)')];const count=Math.max(1,visible.length);grid.style.setProperty('--print-day-count',count);grid.style.setProperty('--print-font-scale',Math.min(1.65,7/count).toFixed(2));}
+window.addEventListener('beforeprint',preparePrintLayout);
+function renderPlanner(){let start=weekStart(focusDate),end=shift(start,6);document.getElementById('dateLabel').textContent=fmt(start,{month:'short',day:'numeric'})+' – '+fmt(end,{month:'short',day:'numeric',year:'numeric'});let grid=document.getElementById('weekView');grid.innerHTML='';for(let i=0;i<7;i++){let date=shift(start,i),collapsed=collapsedDays.has(date),col=document.createElement('div');col.className='day-col'+(collapsed?' collapsed':'');col.innerHTML=`<div class="day-head ${date===todayISO()?'today':''}"><button class="day-collapse-toggle" onclick="toggleDay('${date}')" aria-expanded="${!collapsed}" aria-label="${collapsed?'Expand':'Collapse'} ${fmt(date,{weekday:'long'})}"><span><span class="day-name">${fmt(date,{weekday:'short'})}</span> <span class="day-date">${fmt(date,{month:'short',day:'numeric'})}</span></span><span class="collapse-mark">${collapsed?'+':'−'}</span></button></div>${MEALS.map(m=>slotHtml(date,m)).join('')}<button class="empty-add" onclick="focusDate='${date}';setView('daily')">View day →</button>`;grid.appendChild(col)}let meals=document.getElementById('dayMeals');document.getElementById('dayTitle').textContent=fmt(focusDate,{weekday:'long'})+' meals';document.getElementById('dayDate').textContent=fmt(focusDate,{month:'long',day:'numeric',year:'numeric'});meals.innerHTML=MEALS.map(m=>{let plans=getPlan(focusDate,m),valid=plans.map((p,i)=>({p,r:recipe(p.recipeId),i})).filter(x=>x.r);let spend=valid.reduce((a,x)=>a+x.r.cost/Math.max(1,x.r.servings)*x.p.servings,0),servings=valid.reduce((a,x)=>a+x.p.servings,0);return `<div class="meal-row multi-meal-row"><div class="meal-emoji">${valid[0]?.r.emoji||'🍽️'}</div><div class="grow"><h3>${m}${valid.length?' · '+valid.map(x=>esc(x.r.name)).join(', '):''}</h3><p>${valid.length?money(spend)+' estimated · '+servings+' servings':'No meal planned yet'}</p></div><button class="mini" onclick="openAssign('${focusDate}','${m}')">＋ Add recipe</button></div>${valid.map(x=>`<div class="meal-row"><div class="grow"><strong>${x.r.emoji||'🍽️'} ${esc(x.r.name)}</strong><p>${Number(x.p.servings)>0?`${x.p.servings} servings · ${money(x.r.cost/Math.max(1,x.r.servings)*x.p.servings)}`:'Servings not set'}</p></div><button class="mini" onclick="openRecipe('${x.r.id}')">Recipe</button><button class="mini danger" onclick="removePlannedRecipe('${focusDate}','${m}',${x.i})">Remove</button></div>`).join('')}`}).join('');let dailySpend=0,dailyServings=0;MEALS.forEach(m=>getPlan(focusDate,m).forEach(p=>{let r=recipe(p.recipeId);if(r){dailySpend+=r.cost/Math.max(1,r.servings)*p.servings;dailyServings+=p.servings}}));document.getElementById('daySpend').textContent=money(dailySpend);document.getElementById('dayServings').textContent=dailyServings;renderStats()}
 function renderStats(){let count=0,spend=0;Object.values(state.plan).forEach(value=>{(Array.isArray(value)?value:[value]).forEach(p=>{let r=p&&recipe(p.recipeId);if(r){count++;const servings=Number(p.servings);if(servings>0)spend+=r.cost/Math.max(1,r.servings)*servings}})});document.getElementById('plannedStat').textContent=count;document.getElementById('spendStat').textContent=money(spend);document.getElementById('recipeStat').textContent=state.recipes.length;document.getElementById('householdBadge').textContent='⌂ '+(state.settings.householdName||'Household planner')}
 function removePlannedRecipe(date,meal,index){let key=planKey(date,meal),plans=getPlan(date,meal);if(index<0||index>=plans.length)return;plans.splice(index,1);if(!plans.length)delete state.plan[key];persist();renderPlanner();renderGroceries();notify('Recipe removed from meal')}
 function openAssign(date,meal){let options=state.recipes.map(r=>`<option value="${esc(r.id)}">${esc(r.name)} · ${r.category}</option>`).join('');let plans=getPlan(date,meal);let content=`<div class="modal-head"><h2>Add to ${meal.toLowerCase()}</h2><button class="close" onclick="closeRecipe()">×</button></div><p class="muted">${fmt(date,{weekday:'long',month:'long',day:'numeric'})}</p>${plans.length?`<p class="muted">Already planned: ${plans.map(p=>esc(recipe(p.recipeId)?.name||'Recipe')).join(', ')}</p>`:''}<div class="field"><label>Choose a recipe</label><select id="assignRecipe"><option value="">— Choose a recipe —</option>${options}</select></div><div class="field"><label>Servings for this recipe</label><input id="assignServings" type="number" min="1" placeholder="Leave blank if undecided" value=""></div><div class="toolbar" style="justify-content:flex-end;margin-top:18px"><button class="pill" onclick="closeRecipe()">Cancel</button><button class="primary" onclick="saveAssign('${date}','${meal}')">Add recipe</button></div>`;showCustomModal(content);document.getElementById('assignRecipe').focus()}
